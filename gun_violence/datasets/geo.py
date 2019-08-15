@@ -2,7 +2,50 @@ import esri2gpd
 from . import EPSG
 from .core import Dataset
 
-__all__ = ["Neighborhoods", "ZIPCodes", "CensusTracts2000", "CensusTracts2010"]
+__all__ = [
+    "Neighborhoods",
+    "ZIPCodes",
+    "CensusTracts2000",
+    "CensusTracts2010",
+    "PoliceDistricts",
+    "CityLimits",
+]
+
+
+class CityLimits(Dataset):
+    """
+    Philadelphia's city limits.
+
+    Source
+    ------
+    http://phl.maps.arcgis.com/home/item.html?id=405ec3da942d4e20869d4e1449a2be48
+    """
+
+    @classmethod
+    def download(cls, **kwargs):
+
+        url = "https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/City_Limits/FeatureServer/0"
+        return esri2gpd.get(url).to_crs(epsg=EPSG)
+
+
+class PoliceDistricts(Dataset):
+    """
+    Polygons representing Philadelphia's police districts.
+
+    Source
+    ------
+    http://phl.maps.arcgis.com/home/item.html?id=62ec63afb8824a15953399b1fa819df2
+    """
+
+    @classmethod
+    def download(cls, **kwargs):
+
+        url = "https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Boundaries_District/FeatureServer/0"
+        return (
+            esri2gpd.get(url, fields=["DIST_NUM"])
+            .to_crs(epsg=EPSG)
+            .rename(columns={"DIST_NUM": "police_district"})
+        )
 
 
 class Neighborhoods(Dataset):
@@ -19,7 +62,7 @@ class Neighborhoods(Dataset):
     """
 
     @classmethod
-    def download(self):
+    def download(cls, **kwargs):
 
         url = "https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services/Philly_Neighborhoods/FeatureServer/0"
         return (
@@ -43,7 +86,7 @@ class ZIPCodes(Dataset):
     """
 
     @classmethod
-    def download(self):
+    def download(cls, **kwargs):
 
         url = "https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Philadelphia_ZCTA_2018/FeatureServer/0"
         return esri2gpd.get(url, fields=["zip_code"]).to_crs(epsg=EPSG)
@@ -59,7 +102,7 @@ class CensusTracts2010(Dataset):
     """
 
     @classmethod
-    def download(self):
+    def download(cls, **kwargs):
 
         url = "https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Census_Tracts_2010/FeatureServer/0"
         return (
@@ -81,7 +124,7 @@ class CensusTracts2000(Dataset):
     """
 
     @classmethod
-    def download(self):
+    def download(cls, **kwargs):
 
         url = "https://services.arcgis.com/fLeGjb7u4uXqeF9q/arcgis/rest/services/Census_Tracts_2000/FeatureServer/0"
         return (

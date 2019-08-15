@@ -18,7 +18,7 @@ class PhillyMSAHousingIndex(Dataset):
     date_columns = ["date"]
 
     @classmethod
-    def download(self):
+    def download(cls, **kwargs):
 
         api_key = os.environ.get("FRED_API_KEY", None)
         if api_key is None:

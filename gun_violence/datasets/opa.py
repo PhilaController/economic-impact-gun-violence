@@ -64,7 +64,13 @@ def generate_sales_file(start_year=2006, end_year=2020, opa_data_dir=None):
 
 def generate_value_added_sales_by_year(start_year=2006, end_year=2018):
     """
-    Generate the sales files by year with value-added
+    Generate the sales files by year with value-added columns.
+
+    Notes
+    -----
+    This takes the file of unique sales and adds several useful columns, including
+    indexed housing prices and geocoded fields (zip codes, neighborhoods, and 
+    police districts).
     """
 
     # get the main sales file
@@ -99,6 +105,7 @@ def generate_value_added_sales_by_year(start_year=2006, end_year=2018):
     # geocode!
     zip_codes = ZIPCodes.get()
     neighborhoods = Neighborhoods.get()
+    police_districts = PoliceDistricts.get()
 
     # save each year
     for year in range(start_year, end_year + 1):
@@ -120,8 +127,15 @@ def generate_value_added_sales_by_year(start_year=2006, end_year=2018):
             .drop(labels=["lat", "lng"], axis=1)
         )
 
+        if "zip_code" in gdf.columns:
+            gdf = gdf.drop(labels=["zip_code"], axis=1)
+
         # geocode
-        gdf = gdf.pipe(geocode, zip_codes).pipe(geocode, neighborhoods)
+        gdf = (
+            gdf.pipe(geocode, zip_codes)
+            .pipe(geocode, neighborhoods)
+            .pipe(geocode, police_districts)
+        )
 
         path = os.path.join(dirname, f"{year}.csv")
         gdf.to_csv(path, index=False)
@@ -160,7 +174,7 @@ class ResidentialSales(Dataset):
     date_columns = ["sale_date"]
 
     @classmethod
-    def download(cls):
+    def download(cls, **kwargs):
 
         files = glob(os.path.join(data_dir, "OPA", "ValueAdded", "*.csv"))
         out = []
@@ -171,13 +185,21 @@ class ResidentialSales(Dataset):
                 pd.read_csv(f, low_memory=False)
                 .query("sale_price > 1")
                 .assign(
-                    log_sale_price=lambda df: np.log10(df.sale_price),
-                    log_sale_price_indexed=lambda df: np.log10(df.sale_price_indexed),
+                    sale_date=lambda df: pd.to_datetime(df.sale_date).dt.tz_localize(
+                        "UTC"
+                    ),
+                    ln_sale_price=lambda df: np.log(df.sale_price),
+                    ln_sale_price_indexed=lambda df: np.log(df.sale_price_indexed),
                     is_condo=lambda df: df.parcel_number.astype(str).str.startswith(
                         "888"
                     ),
+                    time_offset=lambda df: (
+                        df.sale_date - pd.to_datetime("1/1/2006").tz_localize("UTC")
+                    )
+                    .dt.total_seconds()
+                    .values,
                 )
-                .pipe(_remove_outliers, "log_sale_price")
+                .pipe(_remove_outliers, "ln_sale_price")
             )
             out.append(df)
 

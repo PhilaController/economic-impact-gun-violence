@@ -56,11 +56,15 @@ class Dataset(ABC):
         return dd.read_csv(path, assume_missing=True)
 
     @classmethod
-    def get(cls, fresh=False):
+    def get_path(cls, **kwargs):
+        return os.path.join(data_dir, cls.__name__)
+
+    @classmethod
+    def get(cls, fresh=False, **kwargs):
         """
         Load the dataset, optionally downloading a fresh copy.
         """
-        dirname = os.path.join(data_dir, cls.__name__)
+        dirname = cls.get_path(**kwargs)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
             fresh = True
@@ -68,7 +72,7 @@ class Dataset(ABC):
         if not os.path.exists(os.path.join(dirname, "data.csv")) or fresh:
 
             # download and save a fresh copy
-            data = cls.download()
+            data = cls.download(**kwargs)
             data.to_csv(os.path.join(dirname, "data.csv"), index=False)
 
             # save the download time
@@ -76,7 +80,9 @@ class Dataset(ABC):
             json.dump(meta, open(os.path.join(dirname, "meta.json"), "w"))
 
         else:
-            data = cls._format_data(pd.read_csv(os.path.join(dirname, "data.csv")))
+            data = cls._format_data(
+                pd.read_csv(os.path.join(dirname, "data.csv"), low_memory=False)
+            )
 
         return data
 
