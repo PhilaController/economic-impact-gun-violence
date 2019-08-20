@@ -13,8 +13,8 @@ def get_sale_price_psf_from_homicide(
     split_results=False,
 ):
     """
-    Calculate the sale price per square foot as a distance from the
-    location of a homicide.
+    Calculate the sale price per square foot as a function of the distance 
+    from the location of a homicide.
 
     Parameters
     ----------

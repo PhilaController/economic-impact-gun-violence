@@ -1,7 +1,10 @@
+"""
+A line chart showing the sale price per sq. ft. relative to the 
+citywide median, as a function of the distance from 
+"""
 from .. import datasets as gv_data
 from ..modeling import get_sale_price_psf_from_homicide
 from . import default_style
-import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
@@ -10,22 +13,30 @@ import matplotlib.transforms as transforms
 
 
 def _load_data():
+    """
+    Load the data we will need.
+    """
+    # Load sales and homicides
     sales = gv_data.ResidentialSales.get()
     homicides = gv_data.PoliceHomicides.get()
 
+    # Remove any null entries
     sales = sales.loc[sales.geometry.notnull()]
     homicides = homicides.loc[homicides.geometry.notnull()]
 
     return sales, homicides
 
 
-def plot(fig_num, outfile):
-
-    # load the data
+def plot(fig_num, outfile, xmax=2.25):
+    """
+    A line chart showing the sale price per sq. ft. relative to the 
+    citywide median, as a function of the distance from 
+    """
+    # Load the data
     sales, homicides = _load_data()
 
-    # perform the calculation
-    space_radius = 2.5
+    # Perform the calculation
+    space_radius = 2.5  # in miles
     time_window = [90, 90]
     X, Y, N, citywide_median = get_sale_price_psf_from_homicide(
         homicides, sales, space_radius, time_window, nbins=20
@@ -34,15 +45,18 @@ def plot(fig_num, outfile):
     with plt.style.context("fivethirtyeight"):
         plt.rcParams.update(default_style)
 
-        # initialize
-        grid_kws = dict(left=0.1, bottom=0.15, top=0.7)
-        fig, ax = plt.subplots(figsize=(5, 3), gridspec_kw=grid_kws)
+        # Initialize
+        fig, ax = plt.subplots(
+            figsize=(5, 3), gridspec_kw=dict(left=0.1, bottom=0.15, top=0.7)
+        )
 
-        # plot
+        # Make the line chart
         color = palette["love-park-red"]
+        valid = X < xmax
+        Y /= citywide_median
         ax.plot(
-            X,
-            Y / citywide_median,
+            X[valid],
+            Y[valid],
             marker="o",
             color=color,
             mec=color,
@@ -53,8 +67,10 @@ def plot(fig_num, outfile):
             zorder=10,
         )
 
+        # Add an x-axis label
         ax.set_xlabel("Distance from a homicide (miles)", fontsize=10, weight="bold")
 
+        # Add a y-axis label
         fig.text(
             0.005,
             1.01,
@@ -68,6 +84,7 @@ def plot(fig_num, outfile):
             va="bottom",
         )
 
+        # Format axes
         ax.set_xlim(-0.05, 2.25)
         ax.set_xticks(np.arange(0, 2.1, 0.5))
         ax.set_yticklabels(["%.0f%%" % (100 * x) for x in ax.get_yticks()], fontsize=12)
@@ -76,6 +93,7 @@ def plot(fig_num, outfile):
         ax.axhline(y=1, c=palette["dark-gray"])
         ax.set_ylim(top=1.1)
 
+        # Label the citywide median
         ax.text(
             1,
             1.015,
@@ -117,5 +135,6 @@ def plot(fig_num, outfile):
             style="italic",
         )
 
+        # Save!
         plt.savefig(outfile, dpi=300)
 

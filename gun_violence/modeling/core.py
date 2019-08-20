@@ -9,6 +9,7 @@ from ..datasets import amenities
 
 __all__ = ["add_neighborhood_features", "feature_engineer_sales", "get_modeling_inputs"]
 
+# fields related to building characteristics
 BUILDING_CHARACTERISTICS = [
     "basements",
     "building_code_description",
@@ -38,6 +39,7 @@ BUILDING_CHARACTERISTICS = [
     "zoning",
 ]
 
+# categorical fieldss
 CATEGORICAL = [
     "basements",
     "building_code_description",
@@ -64,6 +66,7 @@ CATEGORICAL = [
     "spacetime_flag*",
 ]
 
+# fields we don't need to do the modeling
 REMOVE = [
     "geometry",
     "sale_price",
@@ -81,7 +84,16 @@ REMOVE = [
 
 def _knn_distance(coordinates, measureTo, k):
     """
-    Return the average distance to the k nearest neighbors.
+    Internal function to return the average distance to the k-nearest neighbors.
+    
+    Parameters
+    ----------
+    coordinates : array_like
+        the 2D array of coordinates for sales
+    measureTo : array_like
+        the coordinates of the thing we are measuring to
+    k : int
+        the number of neighbors to find
     """
     nbrs = NearestNeighbors(n_neighbors=k, algorithm="ball_tree").fit(measureTo)
     return nbrs.kneighbors(coordinates)
@@ -104,6 +116,7 @@ def add_neighborhood_features(sales):
     out = sales.copy()
     salesXY = np.vstack([sales.geometry.x, sales.geometry.y]).T
 
+    # the features to calculate distances to
     features = {
         "Universities": [1, "dist_univ"],
         "Parks": [1, "dist_park"],
@@ -141,7 +154,7 @@ def add_neighborhood_features(sales):
     return out
 
 
-def feature_engineer_sales(sales, include_cols=["spacetime_flag", "dist"]):
+def feature_engineer_sales(sales, always_include=["spacetime_flag", "dist"]):
     """
     Return a clean version of the input sales data after
     performing multiple feature engineering steps.
@@ -150,12 +163,15 @@ def feature_engineer_sales(sales, include_cols=["spacetime_flag", "dist"]):
     ----------
     sales : DataFrame
         the input sales data
+    always_include : list, optional
+        list of any columns to include in the output data 
 
     Returns
     -------
     DataFrame : 
         the cleaned version of the data
     """
+    # Extract building characteristics that are present
     building_characteristics = [
         col for col in BUILDING_CHARACTERISTICS if col in sales.columns
     ]
@@ -163,13 +179,14 @@ def feature_engineer_sales(sales, include_cols=["spacetime_flag", "dist"]):
     def add_other_category(data, N=25):
         return data.replace(data.value_counts(dropna=False).iloc[N:].index, "Other")
 
-    # spacetime flags
+    # Columns to keep
     extra_cols = [
         col
         for col in sales.columns
-        if any(col.startswith(base) for base in include_cols)
+        if any(col.startswith(base) for base in always_include)
     ]
 
+    # Do the formatting
     out = (
         sales.loc[
             :,
@@ -257,10 +274,15 @@ def feature_engineer_sales(sales, include_cols=["spacetime_flag", "dist"]):
 
 
 def get_modeling_inputs(
-    sales, dropna=False, endog="ln_sale_price_indexed", as_panel=False
+    sales,
+    dropna=False,
+    endog="ln_sale_price_indexed",
+    as_panel=False,
+    engineer_sales=True,
 ):
     """
-    Return the inputs to the regression model.
+    Return the inputs to the regression model, optionally performing
+    feature engineering first.
 
     Parameters
     ----------
@@ -273,36 +295,44 @@ def get_modeling_inputs(
     as_panel : bool, optional
         whether to return the data in a panel format, with the neighborhood and 
         sale year as indices
+    engineer_sales : bool, optional
+        whether to perform feature engineering first
 
     Returns
     -------
     X, Y: array_like
-        the X and Y features
+        the X and Y feature inputs to the regression
     """
     assert endog in REMOVE
 
     # Engineer features
-    features = feature_engineer_sales(sales)
+    if engineer_sales:
+        features = feature_engineer_sales(sales)
+    else:
+        features = sales.copy()
 
     # Do not remove the dependent variable
     unnecessary = list(REMOVE)
     unnecessary.remove(endog)
 
+    # Keep sale year for panel data
     if as_panel:
         unnecessary.remove("sale_year")
 
     # Trim unnecessary columns
+    unnecessary = [col for col in unnecessary if col in features.columns]
     features = features.drop(labels=unnecessary, axis=1)
 
     # Drop NaNs?
     if dropna:
         features = features.dropna()
 
+    # Specify index columns for panel data
     index_cols = []
     if as_panel:
         index_cols = ["neighborhood", "sale_year"]
 
-    # Get column types
+    # Get categorical and numerical field types
     cat_cols = [
         col
         for col in features.columns
@@ -314,7 +344,7 @@ def get_modeling_inputs(
         if features.dtypes[col].kind != "O" and col != endog and col not in index_cols
     ]
 
-    # One-Hot encode
+    # One-Hot encode the categorical data
     oneHotData = []
     for col in cat_cols:
         if col.startswith("spacetime"):
@@ -327,7 +357,7 @@ def get_modeling_inputs(
             )
     oneHotData = pd.concat(oneHotData, axis=1)
 
-    # remove flags
+    # Remove flags before merging
     flags = [col for col in features.columns if col.startswith("spacetime")]
     if len(flags):
         features = features.drop(labels=flags, axis=1)
@@ -341,7 +371,7 @@ def get_modeling_inputs(
         )
     )
 
-    # New categorical columns
+    # The names of the new categorical columns
     cat_cols = list(oneHotData.columns)
 
     # Setup the pipeline
@@ -353,25 +383,28 @@ def get_modeling_inputs(
     # the Y variable
     Y = features[endog].copy()
 
-    # the index
+    # Index for panel data
     index = None
     if as_panel:
         index = features[index_cols].copy()
 
-    # the X variable
+    # The X variables
     features = features.drop(labels=[endog] + index_cols, axis=1)
     transformed_features = np.concatenate(
         [features[cat_cols].values, ct.fit_transform(features)], axis=1
     )
+
+    # Make into a DataFrame and add a constant
     X = pd.DataFrame(transformed_features, columns=cat_cols + num_cols).assign(
         const=1.0
     )
 
-    # reset index
+    # Reset index
     Y = Y.reset_index(drop=True)
     if index is not None:
         index = index.reset_index(drop=True)
 
+    # Add index for panel data
     if as_panel:
         X = pd.concat([X, index], axis=1).set_index(index_cols)
         Y = pd.concat([Y, index], axis=1).set_index(index_cols)

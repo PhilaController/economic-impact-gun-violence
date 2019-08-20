@@ -4,7 +4,7 @@ import pandas as pd
 
 def save_regression_result(result, filename, **meta):
     """
-    Save a regression result to a file.
+    Save a regression result to a pickle file.
 
     Parameters
     ----------
@@ -35,7 +35,7 @@ def save_regression_result(result, filename, **meta):
 
 def load_regression_result(filename):
     """
-    Load a regression result from the specified file
+    Load a regression result from the specified file.
 
     Parameters
     ----------

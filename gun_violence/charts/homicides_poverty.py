@@ -1,12 +1,13 @@
+"""
+A 3 x 3 panel chart showing concentrated disadvantage maps with homicides 
+overlaid from 2010 to 2017.
+"""
 from .. import datasets as gv_data
-from ..modeling import get_sale_price_psf_from_homicide
 from . import default_style
 import pandas as pd
-import geopandas as gpd
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
-import seaborn as sns
 from phila_colors import palette
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
@@ -15,19 +16,19 @@ PAD = 1500
 
 
 def _load_data():
-
-    # load homicides
+    """
+    Internal function to get the data to plot.
+    """
+    # Load homicides
     homicides = gv_data.PoliceHomicides.get()
 
-    # percent in poverty
+    # Calculate concentrated disadvantage
     sub_data = []
     for cls in [
         "PublicAssistance",
         "FemaleHouseholders",
-        # "UnemploymentRate",
         "PercentInPoverty",
         "PercentUnder18",
-        # "PercentBlack",
     ]:
         subset = []
         for year in YEARS:
@@ -41,41 +42,45 @@ def _load_data():
     for df in sub_data[1:]:
         data = data.join(df.drop(labels=["geometry"], axis=1))
 
+    # Do min/max normalization on each
     for col in [
         "percent_public_assistance",
         "percent_female_householder",
         "percent_in_poverty",
         "percent_under_18",
-        # "percent_black",
     ]:
         data[col + "_normed"] = (data[col] - data[col].min()) / (
             data[col].max() - data[col].min()
         )
 
+    # Normalize sum to 0 to 1
     data["index"] = data.filter(regex="_normed").sum(axis=1) / 5.0
 
     return homicides, data
 
 
 def plot(fig_num, outfile):
-
-    # load the data
+    """
+    Plot a 3 x 3 panel chart showing concentrated disadvantage maps of 
+    Philadelphia with homicides overlaid from 2010 to 2017.
+    """
+    # Get the data
     homicides, poverty = _load_data()
 
-    # plot the city limits as background
+    # Use city limits as background
     limits = gv_data.CityLimits.get()
 
     with plt.style.context("fivethirtyeight"):
         plt.rcParams.update(default_style)
 
-        # initialize
-        grid_kws = dict(
-            left=0.02, bottom=0.07, top=0.9, right=0.98, wspace=0, hspace=0.1
-        )
-        nrows = 3
-        ncols = 3
+        # Initialize
         fig, axs = plt.subplots(
-            nrows=nrows, ncols=ncols, figsize=(6, 5.5), gridspec_kw=grid_kws
+            nrows=3,
+            ncols=3,
+            figsize=(6, 5.5),
+            gridspec_kw=dict(
+                left=0.02, bottom=0.07, top=0.9, right=0.98, wspace=0, hspace=0.1
+            ),
         )
 
         axs = np.ravel(axs)
@@ -83,16 +88,19 @@ def plot(fig_num, outfile):
 
             ax = axs[i]
 
-            # get data for this year
+            # Get data for this year
             H = homicides.query("year == @year")
             P = poverty.query("year == @year")
 
+            # Add city limits as background
             limits.buffer(1500).plot(
                 ax=ax, facecolor=palette["sidewalk"], edgecolor=palette["sidewalk"]
             )
 
-            # plot
+            # Plot choropleth of concentrated disadvantage
             P.plot(ax=ax, column="index", cmap="Blues", edgecolor="none", vmin=0)
+
+            # Plot homicides as markers
             H.plot(
                 ax=ax,
                 marker=".",
@@ -102,7 +110,7 @@ def plot(fig_num, outfile):
                 color=palette["love-park-red"],
             )
 
-            # add title
+            # Add title
             ax.text(
                 0.5,
                 1.0,
@@ -114,7 +122,7 @@ def plot(fig_num, outfile):
                 transform=ax.transAxes,
             )
 
-            # format
+            # Format
             ax.set_axis_off()
             xmin, ymin, xmax, ymax = P.total_bounds
             ax.set_xlim(xmin - PAD, xmax + PAD)
@@ -123,7 +131,7 @@ def plot(fig_num, outfile):
         ax = axs[-1]
         ax.set_axis_off()
 
-        # make the colorbar
+        # Make the colorbar
         cax = inset_axes(
             ax,
             width="90%",  # width = 50% of parent_bbox width
@@ -170,7 +178,7 @@ def plot(fig_num, outfile):
             fontsize=8,
         )
 
-        # add the legend
+        # Add the legend
         legend_elements = [
             Line2D(
                 [0],
@@ -246,5 +254,6 @@ def plot(fig_num, outfile):
             va="bottom",
         )
 
+        # Save!
         plt.savefig(outfile, dpi=300)
 
