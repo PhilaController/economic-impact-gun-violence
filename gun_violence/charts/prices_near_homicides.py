@@ -53,7 +53,6 @@ def plot(fig_num, outfile, xmax=2.25):
         # Make the line chart
         color = palette["love-park-red"]
         valid = X < xmax
-        Y /= citywide_median
         ax.plot(
             X[valid],
             Y[valid],
@@ -74,7 +73,7 @@ def plot(fig_num, outfile, xmax=2.25):
         fig.text(
             0.005,
             1.01,
-            "Median sale price\nrelative to the citywide median",
+            "Median sale price\nper square foot",
             fontsize=10,
             weight="bold",
             transform=transforms.blended_transform_factory(
@@ -87,16 +86,17 @@ def plot(fig_num, outfile, xmax=2.25):
         # Format axes
         ax.set_xlim(-0.05, 2.25)
         ax.set_xticks(np.arange(0, 2.1, 0.5))
-        ax.set_yticklabels(["%.0f%%" % (100 * x) for x in ax.get_yticks()], fontsize=12)
+        ax.set_yticks([40, 70, 100, 130])
+        ax.set_ylim(35, 135)
+        ax.set_yticklabels(["$%.0f" % (x) for x in ax.get_yticks()], fontsize=12)
         plt.setp(ax.get_xticklabels(), fontsize=12)
         sns.despine(left=True, bottom=True)
-        ax.axhline(y=1, c=palette["dark-gray"])
-        ax.set_ylim(top=1.1)
+        ax.axhline(y=citywide_median, c=palette["dark-gray"])
 
         # Label the citywide median
         ax.text(
             1,
-            1.015,
+            citywide_median + 3,
             "Citywide median: $%.0f per sq. ft." % citywide_median,
             ha="right",
             va="bottom",
