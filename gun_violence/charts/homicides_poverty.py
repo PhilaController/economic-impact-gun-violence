@@ -3,12 +3,11 @@ A 3 x 3 panel chart showing concentrated disadvantage maps with homicides
 overlaid from 2010 to 2017.
 """
 from .. import datasets as gv_data
-from . import default_style
+from . import default_style, palette
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
-from phila_colors import palette
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 YEARS = list(range(2010, 2018))
@@ -70,8 +69,7 @@ def plot(fig_num, outfile):
     # Use city limits as background
     limits = gv_data.CityLimits.get()
 
-    with plt.style.context("fivethirtyeight"):
-        plt.rcParams.update(default_style)
+    with plt.style.context(default_style):
 
         # Initialize
         fig, axs = plt.subplots(
@@ -107,7 +105,7 @@ def plot(fig_num, outfile):
                 markersize=10,
                 alpha=0.8,
                 edgecolor="none",
-                color=palette["love-park-red"],
+                color=palette["red"],
             )
 
             # Add title
@@ -156,7 +154,7 @@ def plot(fig_num, outfile):
             ha="center",
         )
 
-        cbar.outline.set_edgecolor(palette["black"])
+        cbar.outline.set_edgecolor(palette["almost-black"])
         cbar.outline.set_linewidth(1)
 
         cax.text(
@@ -183,7 +181,7 @@ def plot(fig_num, outfile):
             Line2D(
                 [0],
                 [0],
-                color=palette["love-park-red"],
+                color=palette["red"],
                 ls="",
                 marker="o",
                 label="Homicide Locations",

@@ -3,12 +3,11 @@ A two-panel chart showing a bar chart of the number of lives saved
 and the cost / added revenue of the plan over 5 years.
 """
 from .. import datasets as gv_data
-from . import default_style
+from . import default_style, palette
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
-from phila_colors import palette
 
 
 def _calculate():
@@ -63,8 +62,7 @@ def plot(fig_num, outfile):
     # Perform the calculation
     data = _calculate()
 
-    with plt.style.context("fivethirtyeight"):
-        plt.rcParams.update(default_style)
+    with plt.style.context(default_style):
 
         # Initialize
         fig, axs = plt.subplots(
@@ -75,10 +73,9 @@ def plot(fig_num, outfile):
         )
 
         ax = axs[0]
-        sns.despine(ax=ax)
 
         # Top panel: cumulative lives saved
-        color = palette["dark-ben-franklin"]
+        color = palette["blue"]
         sns.barplot(
             x=data["plan_year"],
             y=data["lives_saved"],
@@ -101,13 +98,15 @@ def plot(fig_num, outfile):
         )
 
         # Format
-        ax.set_ylim(-10, 160)
+        ax.set_ylim(0, 160)
         ax.set_yticks([0, 50, 100, 150])
         plt.setp(ax.get_yticklabels(), fontsize=11)
         plt.setp(ax.get_xticklabels(), fontsize=11)
         ax.set_ylabel("")
         ax.set_xlabel("Plan Year", fontsize=10, weight="bold")
         ax.xaxis.labelpad = 0
+
+        ax.axhline(y=0, c=palette["light-gray"], lw=4, zorder=101)
 
         for i, row in data.iterrows():
             ax.text(
@@ -123,10 +122,9 @@ def plot(fig_num, outfile):
 
         # Bottom panel: cost/benefit
         ax = axs[1]
-        sns.despine(ax=ax)
 
         # Cumulative Plan Cost
-        color = palette["love-park-red"]
+        color = palette["red"]
         ax.plot(
             data["plan_year"],
             data["plan_cost"] / 1e6,
@@ -249,13 +247,7 @@ def plot(fig_num, outfile):
             + "Revenue estimate compounds annually, assuming a 2.5% increase in housing prices for every reduction in homicides."
         )
         fig.text(
-            0.005,
-            0.002,
-            footnote,
-            fontsize=5,
-            color=palette["dark-gray"],
-            ha="left",
-            va="bottom",
+            0.005, 0.002, footnote, fontsize=5, color="#444444", ha="left", va="bottom"
         )
 
         # Save!

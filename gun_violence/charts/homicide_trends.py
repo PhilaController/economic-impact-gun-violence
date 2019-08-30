@@ -7,11 +7,10 @@ A 4x4 panel chart showing the following trends in homicides in Philadelphia:
 4. Age
 """
 from .. import datasets as gv_data
-from . import default_style
+from . import default_style, palette
 import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
-from phila_colors import palette
 
 
 def _age_panel(ax, df):
@@ -19,10 +18,10 @@ def _age_panel(ax, df):
     Histogram showing the distribution of homicides by victim age.
     """
     # Plot the histogram
-    ax.hist(df.age.values, bins="auto", histtype="bar", color=palette["dark-gray"])
+    ax.hist(df.age.values, bins="auto", histtype="bar", color=palette["blue"])
 
     # Format the x-axis
-    ax.set_xlim(0, 95)
+    ax.set_xlim(-5, 95)
     ax.set_xticks([0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
     plt.setp(ax.get_xticklabels(), fontsize=11)
     ax.set_xlabel("Victim Age", weight="bold", fontsize=11)
@@ -33,7 +32,6 @@ def _age_panel(ax, df):
 
     # Sdd a y=0 line
     ax.axhline(y=0, c="k", lw=1, clip_on=False, zorder=10)
-    sns.despine(ax=ax, bottom=True)
 
     # Title
     ax.text(
@@ -56,7 +54,7 @@ def _gender_panel(ax, df):
     N = df.groupby(["year", "sex"]).size().reset_index(name="N")
 
     # Plot a stacked bar graph
-    colors = ["dark-ben-franklin", "love-park-red"]
+    colors = ["blue", "red"]
     order = ["Male", "Female"]
     N.pivot(index="year", columns="sex", values="N").fillna(0)[order].plot.bar(
         stacked=True, ax=ax, legend=False, color=[palette[c] for c in colors]
@@ -68,12 +66,12 @@ def _gender_panel(ax, df):
 
     # Add a legend
     ax.legend(
-        loc="lower right",
+        loc="lower center",
         edgecolor="none",
         framealpha=1,
         ncol=3,
         fontsize=10,
-        bbox_to_anchor=(1, 0.8),
+        bbox_to_anchor=(0.5, 0.8),
     )
 
     # Format the y-axis
@@ -84,7 +82,6 @@ def _gender_panel(ax, df):
 
     # Add a y=0 line
     ax.axhline(y=0, c="k", lw=1, clip_on=False, zorder=10)
-    sns.despine(ax=ax, bottom=True)
 
     # Title
     ax.text(
@@ -105,7 +102,7 @@ def _weapon_panel(ax, df):
     """
     # Plot the total per year
     N_all = df.groupby("year").size()
-    color = palette["ben-franklin-blue"]
+    color = palette["blue"]
     ax.plot(
         N_all.index.tolist(),
         N_all.values,
@@ -121,7 +118,7 @@ def _weapon_panel(ax, df):
 
     # Plot only the firearm-involved
     N_firearm = df.query("weapon == 'firearm'").groupby("year").size()
-    color = palette["love-park-red"]
+    color = palette["red"]
     ax.plot(
         N_firearm.index.tolist(),
         N_firearm.values,
@@ -139,7 +136,10 @@ def _weapon_panel(ax, df):
     for (ha, index, offset) in [("center", 0, 0), ("left", -1, +0.25)]:
         for ii, N in enumerate([N_firearm, N_all]):
             va = "top" if ii == 0 else "bottom"
-            y_offset = -25 if ii == 0 else 10
+            if index != 0:
+                y_offset = -25 if ii == 0 else 10
+            else:
+                y_offset = -30 if ii == 0 else 25
             ax.text(
                 N.index[index] + offset,
                 N.values[index] + y_offset,
@@ -163,17 +163,18 @@ def _weapon_panel(ax, df):
 
     # Add a legend
     ax.legend(
-        loc="lower right",
+        loc="lower center",
         edgecolor="none",
         framealpha=1,
         fontsize=10,
-        bbox_to_anchor=(1, 0.9),
+        bbox_to_anchor=(0.5, 0.92),
+        ncol=1,
     )
 
     # Title
     ax.text(
         0.5,
-        1.3,
+        1.325,
         "Weapon Type",
         fontsize=12,
         weight="bold",
@@ -184,7 +185,6 @@ def _weapon_panel(ax, df):
 
     # Add a y=0 line
     ax.axhline(y=0, c="k", lw=1, clip_on=False, zorder=10)
-    sns.despine(ax=ax, bottom=True)
 
 
 def _race_panel(ax, df):
@@ -196,7 +196,7 @@ def _race_panel(ax, df):
     N = df.groupby(["year", "race"]).size().reset_index(name="N")
 
     # Plot
-    colors = ["dark-ben-franklin", "bell-yellow", "love-park-red"]
+    colors = ["blue", "yellow", "red"]
     order = ["Black", "White", "All Others"]
     N.pivot(index="year", columns="race", values="N").fillna(0)[order].plot.bar(
         stacked=True, ax=ax, legend=False, color=[palette[c] for c in colors]
@@ -219,13 +219,13 @@ def _race_panel(ax, df):
         framealpha=1,
         ncol=2,
         fontsize=10,
-        bbox_to_anchor=(1, 0.9),
+        bbox_to_anchor=(1, 0.92),
     )
 
     # Title
     ax.text(
         0.5,
-        1.3,
+        1.325,
         "Race",
         fontsize=12,
         weight="bold",
@@ -236,7 +236,6 @@ def _race_panel(ax, df):
 
     # Add a y=0 line
     ax.axhline(y=0, c="k", lw=1, clip_on=False, zorder=10)
-    sns.despine(ax=ax, bottom=True)
 
 
 def plot(fig_num, outfile):
@@ -253,8 +252,7 @@ def plot(fig_num, outfile):
     # Load the data
     homicides = gv_data.PoliceHomicides.get()
 
-    with plt.style.context("fivethirtyeight"):
-        plt.rcParams.update(default_style)
+    with plt.style.context(default_style):
 
         # Create the figure
         fig, axs = plt.subplots(
@@ -262,7 +260,7 @@ def plot(fig_num, outfile):
             ncols=2,
             figsize=(6.4, 5.5),
             gridspec_kw=dict(
-                left=0.09, right=0.95, bottom=0.12, top=0.78, hspace=0.6, wspace=0.5
+                left=0.09, right=0.95, bottom=0.12, top=0.77, hspace=0.6, wspace=0.5
             ),
         )
 

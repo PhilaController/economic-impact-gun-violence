@@ -4,11 +4,10 @@ citywide median, as a function of the distance from
 """
 from .. import datasets as gv_data
 from ..modeling import get_sale_price_psf_from_homicide
-from . import default_style
+from . import default_style, palette
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
-from phila_colors import palette
 import matplotlib.transforms as transforms
 
 
@@ -42,16 +41,15 @@ def plot(fig_num, outfile, xmax=2.25):
         homicides, sales, space_radius, time_window, nbins=20
     )
 
-    with plt.style.context("fivethirtyeight"):
-        plt.rcParams.update(default_style)
+    with plt.style.context(default_style):
 
         # Initialize
         fig, ax = plt.subplots(
-            figsize=(5, 3), gridspec_kw=dict(left=0.1, bottom=0.15, top=0.7)
+            figsize=(5, 3), gridspec_kw=dict(left=0.1, bottom=0.15, top=0.68)
         )
 
         # Make the line chart
-        color = palette["love-park-red"]
+        color = palette["blue"]
         valid = X < xmax
         ax.plot(
             X[valid],
@@ -72,7 +70,7 @@ def plot(fig_num, outfile, xmax=2.25):
         # Add a y-axis label
         fig.text(
             0.005,
-            1.01,
+            1.07,
             "Median sale price\nper square foot",
             fontsize=10,
             weight="bold",
@@ -91,7 +89,7 @@ def plot(fig_num, outfile, xmax=2.25):
         ax.set_yticklabels(["$%.0f" % (x) for x in ax.get_yticks()], fontsize=12)
         plt.setp(ax.get_xticklabels(), fontsize=12)
         sns.despine(left=True, bottom=True)
-        ax.axhline(y=citywide_median, c=palette["dark-gray"])
+        ax.axhline(y=citywide_median, c=palette["medium-gray"])
 
         # Label the citywide median
         ax.text(

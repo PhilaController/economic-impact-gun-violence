@@ -3,14 +3,13 @@ A multi-panel chart showing the trends in residential sale prices
 and number of homicides from 2006 to 2018.
 """
 from .. import datasets as gv_data
-from . import default_style
+from . import default_style, digital_standards as palette
 import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
 import matplotlib.transforms as transforms
-from phila_colors import palette
 from matplotlib.offsetbox import AnchoredOffsetbox, TextArea, HPacker
 import os
 
@@ -121,8 +120,11 @@ def plot(fig_num, outfile):
     num_panels = 126
     neighborhoods = neighborhoods[:num_panels]
 
-    with plt.style.context("fivethirtyeight"):
-        plt.rcParams.update(default_style)
+    neigbhorhoods1 = sorted(neighborhoods[: num_panels // 2])
+    neighborhoods2 = sorted(neighborhoods[num_panels // 2 :])
+    all_neighborhoods = [neigbhorhoods1, neighborhoods2]
+
+    with plt.style.context(default_style):
         plt.rcParams["axes.edgecolor"] = "black"
         plt.rcParams["patch.edgecolor"] = "black"
         plt.rcParams["axes.linewidth"] = 1.0
@@ -135,17 +137,15 @@ def plot(fig_num, outfile):
         for subplot in [0, 1]:
 
             figure_tag = "A" if subplot == 0 else "B"
+            neighborhoods = all_neighborhoods[subplot]
 
             # first figure or second
-            if subplot == 0:
-                panel = 0
-            else:
-                panel = num_panels // 2
+            panel = 0
 
             # Create the figure
             nrows = 9
             ncols = 7
-            TOP = 0.85
+            TOP = 0.87
             fig, axs = plt.subplots(
                 nrows=nrows,
                 ncols=ncols,
@@ -263,12 +263,13 @@ def plot(fig_num, outfile):
                     ax2.tick_params(labelright=False, right=True, width=1, length=3)
                     if j == ncols - 1:
                         ax2.tick_params(labelright=True)
-                        plt.setp(ax2.get_yticklabels(), fontsize=9)
+                        plt.setp(ax2.get_yticklabels(), fontsize=8, va="center")
 
-                    # if j == ncols - 1:
                     for a in [ax, ax2]:
                         for spine in ["left", "top"]:
                             a.spines[spine].set_visible(False)
+                        for spine in ["bottom", "right"]:
+                            a.spines[spine].set_visible(True)
 
                     panel += 1
 
@@ -314,19 +315,9 @@ def plot(fig_num, outfile):
                 borderpad=0.0,
             )
             fig.add_artist(subtitle)
-
             fig.text(
-                0.005,
-                0.937,
-                "Neighborhoods sorted by median sale price in 2018, from most (top left) to least (bottom right) expensive",
-                fontsize=10,
-                ha="left",
-                va="top",
-                style="italic",
-            )
-            fig.text(
-                0.9575,
-                TOP + 0.01,
+                0.9565,
+                TOP + 0.015,
                 "Total\nHomicides",
                 weight="bold",
                 ha="left",

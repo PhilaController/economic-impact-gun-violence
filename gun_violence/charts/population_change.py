@@ -3,13 +3,12 @@ A swarm plot showing the population change from 2010 to 2017 as a
 function of the number of homicides over that period.
 """
 from .. import datasets as gv_data
-from . import default_style
+from . import default_style, palette
 import pandas as pd
 import geopandas as gpd
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
-from phila_colors import palette
 
 
 def _load_data():
@@ -48,10 +47,12 @@ def _load_data():
         tracts,
         pd.concat([pop_change, N_homicides], axis=1).reset_index(),
         on="census_tract_id",
+        how="left",
     )
+    Y["num_homicides"] = Y["num_homicides"].fillna(0)
 
     # Calculate the homicide bin
-    Y["bins"] = pd.cut(Y["num_homicides"], [0, 7, 15, 24, 36, 64])
+    Y["bins"] = pd.cut(Y["num_homicides"], [-1, 7, 15, 24, 36, 64])
 
     # Sign of the population change
     Y["Sign"] = np.where(
@@ -78,14 +79,14 @@ def plot(fig_num, outfile):
             sign = "\u2212"
         return sign + "{:,.0f}".format(abs(x))
 
-    with plt.style.context("fivethirtyeight"):
-        plt.rcParams.update(default_style)
+    with plt.style.context(default_style):
 
         # Initialize
         fig, ax = plt.subplots(
-            figsize=(6, 4),
-            gridspec_kw=dict(left=0.15, bottom=0.15, top=0.85, right=0.98),
+            figsize=(6.4, 4),
+            gridspec_kw=dict(left=0.13, bottom=0.15, top=0.8, right=0.98),
         )
+        print(data.groupby(["bins", "Sign"]).size())
 
         # Plot the swarm plot
         sns.swarmplot(
@@ -96,12 +97,12 @@ def plot(fig_num, outfile):
             palette=["#d6604d", "#4393c3"],
             alpha=1.0,
             ax=ax,
-            size=3.75,
+            size=3,
             edgecolor="none",
         )
 
         # Add a line at y = 0
-        ax.axhline(y=0, c=palette["medium-gray"], lw=2, zorder=1)
+        ax.axhline(y=0, c=palette["sidewalk"], lw=2, zorder=1)
 
         # Format y axis
         ax.set_ylim(-3100, 3100)
@@ -140,7 +141,7 @@ def plot(fig_num, outfile):
         )
         fig.text(
             0.005,
-            0.95,
+            0.955,
             "Population Change and Number of Homicides since 2010 by Census Tract",
             weight="bold",
             fontsize=11,
@@ -149,7 +150,7 @@ def plot(fig_num, outfile):
         )
         fig.text(
             0.005,
-            0.91,
+            0.905,
             "Areas that experienced the most homicides were more likely to have seen a population decline",
             fontsize=9,
             ha="left",

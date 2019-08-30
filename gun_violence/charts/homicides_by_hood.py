@@ -5,12 +5,11 @@ A two panel chart showing two choropleth maps:
 2. The median residential housing sale price in 2018
 """
 from .. import datasets as gv_data
-from . import default_style
+from . import default_style, palette
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
-from phila_colors import palette
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 
 
@@ -68,6 +67,8 @@ def _plot_choropleth(
     if format_prices:
         cbar.set_ticklabels(["$%.0fK" % (np.exp(x) / 1e3) for x in ticks])
 
+    return cbar
+
 
 def plot(fig_num, outfile):
     """
@@ -81,8 +82,7 @@ def plot(fig_num, outfile):
     neighborhoods = gv_data.Neighborhoods.get()
     sales = gv_data.ResidentialSales.get()
 
-    with plt.style.context("fivethirtyeight"):
-        plt.rcParams.update(default_style)
+    with plt.style.context(default_style):
 
         # Create the figure
         fig, axs = plt.subplots(
@@ -90,14 +90,15 @@ def plot(fig_num, outfile):
             ncols=2,
             figsize=(5, 3.5),
             gridspec_kw=dict(
-                left=0.01, right=0.95, bottom=0.07, top=0.825, hspace=0.35, wspace=0.45
+                left=0.01, right=0.95, bottom=0.07, top=0.81, hspace=0.35, wspace=0.45
             ),
         )
 
         # Homicide totals
+        ax = axs[0]
         _plot_choropleth(
             fig,
-            axs[0],
+            ax,
             pd.merge(
                 neighborhoods,
                 homicides.query("year == 2018")
@@ -109,10 +110,21 @@ def plot(fig_num, outfile):
             ticks=[0, 10, 20],
         )
 
+        total = len(homicides.query("year == 2018"))
+        ax.text(
+            0.75,
+            0.2,
+            "Citywide Total\n%.0f" % (total),
+            transform=ax.transAxes,
+            fontsize=9,
+            weight="bold",
+            ha="center",
+        )
+
         # Add a title
         fig.text(
             0.25,
-            0.82,
+            0.80,
             "Total Number of Homicides",
             ha="center",
             weight="bold",
@@ -120,9 +132,10 @@ def plot(fig_num, outfile):
         )
 
         # Median sale price
-        _plot_choropleth(
+        ax = axs[1]
+        cbar = _plot_choropleth(
             fig,
-            axs[1],
+            ax,
             pd.merge(
                 neighborhoods,
                 sales.query("sale_year == 2018")
@@ -137,10 +150,45 @@ def plot(fig_num, outfile):
             format_prices=True,
         )
 
+        citywide_median = np.exp(
+            sales.query("sale_year == 2018")["ln_sale_price"].median()
+        )
+
+        with plt.style.context({"lines.solid_capstyle": "butt"}):
+            ylim = cbar.ax.get_ylim()
+            cbar.ax.vlines(
+                x=np.log(citywide_median),
+                ymin=ylim[0],
+                ymax=ylim[1] * 1.25,
+                lw=2,
+                color=palette["almost-black"],
+                clip_on=False,
+            )
+        cbar.ax.text(
+            np.log(citywide_median),
+            ylim[1] * 1.3,
+            "Citywide Median",
+            fontsize=7,
+            ha="center",
+            va="bottom",
+            clip_on=False,
+            weight="bold",
+        )
+
+        ax.text(
+            0.82,
+            0.2,
+            "Citywide Median\n$%.0fK" % (citywide_median / 1e3),
+            transform=ax.transAxes,
+            fontsize=9,
+            weight="bold",
+            ha="center",
+        )
+
         # Add a title
         fig.text(
             0.75,
-            0.82,
+            0.80,
             "Median Residential Sale Price",
             ha="center",
             weight="bold",
@@ -171,7 +219,7 @@ def plot(fig_num, outfile):
         )
         fig.text(
             0.005,
-            0.955,
+            0.95,
             "Median Sale Price & Homicide Totals across Philadelphia in 2018",
             weight="bold",
             fontsize=11,
@@ -180,7 +228,7 @@ def plot(fig_num, outfile):
         )
         fig.text(
             0.005,
-            0.91,
+            0.90,
             "Areas of the city with the most homicides also have the lowest median sale prices",
             fontsize=10,
             ha="left",
