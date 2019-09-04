@@ -1,6 +1,6 @@
 """
-A two-panel chart showing a bar chart of the number of lives saved 
-and the cost / added revenue of the plan over 5 years.
+A grouped bar chart showing the cumulative cost and added
+revenue associated with a plan that reduces homicides 10% annually.
 """
 from .. import datasets as gv_data
 from . import default_style, palette
@@ -50,125 +50,61 @@ def _calculate():
         R.append(r)
     df["compounded_revenue"] = R
 
+    df["cumulative_revenue"] = df["compounded_revenue"].cumsum()
+
     return df
 
 
 def plot(fig_num, outfile):
     """
-    A two-panel chart showing a bar chart of the number of lives saved 
-    and the cost / added revenue of the plan over 5 years.
+    A grouped bar chart showing the cumulative cost and added
+    revenue associated with a plan that reduces homicides 10% annually.
     """
 
     # Perform the calculation
     data = _calculate()
 
+    # Melt the data
+    data = (
+        data[["plan_year", "cumulative_cost", "cumulative_revenue"]]
+        .assign(
+            cumulative_cost=lambda df: df.cumulative_cost / 1e6,
+            cumulative_revenue=lambda df: df.cumulative_revenue / 1e6,
+        )
+        .rename(
+            columns={
+                "cumulative_cost": "Plan Costs",
+                "cumulative_revenue": "Potential Revenue",
+            }
+        )
+        .melt(id_vars=["plan_year"])
+    )
+
     with plt.style.context(default_style):
 
         # Initialize
-        fig, axs = plt.subplots(
-            nrows=2,
-            ncols=1,
-            figsize=(4.25, 5),
-            gridspec_kw=dict(left=0.15, bottom=0.12, right=0.95, top=0.85, hspace=1.0),
+        fig, ax = plt.subplots(
+            figsize=(4.5, 3),
+            gridspec_kw=dict(left=0.12, bottom=0.18, right=0.95, top=0.7),
         )
 
-        ax = axs[0]
-
-        # Top panel: cumulative lives saved
-        color = palette["blue"]
+        # Grouped bar chart
         sns.barplot(
-            x=data["plan_year"],
-            y=data["lives_saved"],
-            color=color,
+            x="plan_year",
+            y="value",
+            hue="variable",
+            palette=["#cc3000", "#0f4d90"],
             ax=ax,
             saturation=1.0,
             zorder=100,
+            data=data,
         )
-
-        # Total
-        ax.text(
-            2,
-            155,
-            "Total Lives Saved: %.0f" % data["lives_saved"].sum(),
-            fontsize=9,
-            ha="center",
-            va="bottom",
-            weight="bold",
-            bbox=dict(facecolor="white", pad=0),
-        )
-
-        # Format
-        ax.set_ylim(0, 160)
-        ax.set_yticks([0, 50, 100, 150])
-        plt.setp(ax.get_yticklabels(), fontsize=11)
-        plt.setp(ax.get_xticklabels(), fontsize=11)
-        ax.set_ylabel("")
-        ax.set_xlabel("Plan Year", fontsize=10, weight="bold")
-        ax.xaxis.labelpad = 0
-
         ax.axhline(y=0, c=palette["light-gray"], lw=4, zorder=101)
 
-        for i, row in data.iterrows():
-            ax.text(
-                i,
-                row["lives_saved"] + 2,
-                "%.0f" % row["lives_saved"],
-                va="bottom",
-                ha="center",
-                weight="bold",
-                fontsize=10,
-                bbox=dict(facecolor="white", pad=0),
-            )
-
-        # Bottom panel: cost/benefit
-        ax = axs[1]
-
-        # Cumulative Plan Cost
-        color = palette["red"]
-        ax.plot(
-            data["plan_year"],
-            data["plan_cost"] / 1e6,
-            marker="o",
-            color=color,
-            mec=color,
-            mfc="white",
-            mew=3,
-            lw=4,
-            label="Plan Costs",
-            zorder=10,
-            clip_on=False,
-        )
-
-        # Cumulative Added Revenue
-        color = "#666666"
-        ax.plot(
-            data["plan_year"],
-            data["compounded_revenue"] / 1e6,
-            marker="o",
-            color=color,
-            mec=color,
-            mfc="white",
-            mew=3,
-            lw=4,
-            label="Potential Revenue",
-            zorder=10,
-            clip_on=False,
-        )
-
-        # fill between!
-        ax.fill_between(
-            data["plan_year"],
-            data["compounded_revenue"] / 1e6,
-            data["plan_cost"] / 1e6,
-            color=palette["sidewalk"],
-        )
-
-        ax.set_ylim(-5, 55)
-        ax.set_yticks([0, 25, 50])
-        ax.set_xticks([1, 2, 3, 4, 5])
         ax.set_yticklabels(["$%.0fM" % x for x in ax.get_yticks()], fontsize=11)
         plt.setp(ax.get_xticklabels(), fontsize=11)
         ax.set_xlabel("Plan Year", fontsize=10, weight="bold")
+        ax.set_ylabel("")
         ax.xaxis.labelpad = 0
 
         # Add a legend
@@ -177,43 +113,39 @@ def plot(fig_num, outfile):
             edgecolor="none",
             framealpha=1,
             ncol=2,
-            fontsize=9,
-            bbox_to_anchor=(0.5, 0.97),
+            fontsize=10,
+            bbox_to_anchor=(0.5, 0.95),
         )
 
-        # Add the net benefit
-        net = (data["compounded_revenue"].sum() - data["plan_cost"].sum()) / 1e6
-        ax.annotate(
-            "Total Net Benefit: +$%.0fM" % net,
-            xy=(3.5, 20),
-            xycoords="data",
-            xytext=(2.1, 48),
-            textcoords="data",
-            fontsize=9,
-            ha="left",
-            va="top",
-            weight="bold",
-            arrowprops=dict(
-                arrowstyle="->", color="black", lw=2, connectionstyle="arc3,rad=0.2"
-            ),
-            bbox=dict(facecolor="white", pad=0),
-            zorder=1000,
-        )
+        for p in ax.patches:
+            height = p.get_height()
+            if height == 0:
+                y = 3
+            else:
+                y = height + 2
+            ax.text(
+                p.get_x() + p.get_width() / 2.0,
+                y,
+                "$%.0fM" % height,
+                ha="center",
+                fontsize=7,
+                bbox=dict(facecolor="white", pad=0),
+            )
 
         # Add title
         fig.text(
             0.005,
             0.99,
-            f"Figure {fig_num}A",
+            f"Figure {fig_num}",
             weight="bold",
-            fontsize=9,
+            fontsize=8,
             ha="left",
             va="top",
         )
         fig.text(
             0.005,
-            0.96,
-            "Potential Lives Saved from a Plan that Reduces Homicides\nby 10 Percent Annually for Five Years",
+            0.95,
+            "Cumulative Cost and Property Tax Revenue from a Plan that\nReduces Homicides by 10% Annually for Five Years",
             weight="bold",
             fontsize=10,
             ha="left",
@@ -222,21 +154,12 @@ def plot(fig_num, outfile):
 
         fig.text(
             0.005,
-            0.52,
-            f"Figure {fig_num}B",
-            weight="bold",
+            0.845,
+            "Over five years, the return on investment would be $79M",
             fontsize=9,
             ha="left",
             va="top",
-        )
-        fig.text(
-            0.005,
-            0.52,
-            "\nComparing Annual Plan Costs With Potential Tax Revenue\nfrom Increased Housing Prices",
-            weight="bold",
-            fontsize=10,
-            ha="left",
-            va="top",
+            style="italic",
         )
 
         # Add the footnote

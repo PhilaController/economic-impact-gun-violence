@@ -83,10 +83,10 @@ def plot(fig_num, outfile):
 
         # Initialize
         fig, ax = plt.subplots(
-            figsize=(6.4, 4),
-            gridspec_kw=dict(left=0.13, bottom=0.15, top=0.8, right=0.98),
+            figsize=(6.4, 4.5),
+            gridspec_kw=dict(left=0.13, bottom=0.15, top=0.82, right=0.98),
         )
-        print(data.groupby(["bins", "Sign"]).size())
+        ax.set_ylim(-3100, 3100)
 
         # Plot the swarm plot
         sns.swarmplot(
@@ -97,7 +97,7 @@ def plot(fig_num, outfile):
             palette=["#d6604d", "#4393c3"],
             alpha=1.0,
             ax=ax,
-            size=3,
+            size=3.75,
             edgecolor="none",
         )
 
@@ -105,7 +105,6 @@ def plot(fig_num, outfile):
         ax.axhline(y=0, c=palette["sidewalk"], lw=2, zorder=1)
 
         # Format y axis
-        ax.set_ylim(-3100, 3100)
         ax.set_ylabel("Population Change Since 2010", weight="bold", fontsize=11)
         ax.set_yticklabels([get_ylabel(x) for x in ax.get_yticks()], fontsize=11)
 
@@ -124,6 +123,9 @@ def plot(fig_num, outfile):
             facecolor="white",
             framealpha=1,
             edgecolor="none",
+            loc="upper right",
+            bbox_to_anchor=(1, 1),
+            bbox_transform=ax.transAxes,
         )
         title = leg.get_title()
         title.set_weight("bold")
@@ -141,7 +143,7 @@ def plot(fig_num, outfile):
         )
         fig.text(
             0.005,
-            0.955,
+            0.96,
             "Population Change and Number of Homicides since 2010 by Census Tract",
             weight="bold",
             fontsize=11,
@@ -150,7 +152,7 @@ def plot(fig_num, outfile):
         )
         fig.text(
             0.005,
-            0.905,
+            0.92,
             "Areas that experienced the most homicides were more likely to have seen a population decline",
             fontsize=9,
             ha="left",

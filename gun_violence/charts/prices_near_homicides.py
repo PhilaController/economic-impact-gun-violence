@@ -45,7 +45,7 @@ def plot(fig_num, outfile, xmax=2.25):
 
         # Initialize
         fig, ax = plt.subplots(
-            figsize=(5, 3), gridspec_kw=dict(left=0.1, bottom=0.15, top=0.68)
+            figsize=(5, 3), gridspec_kw=dict(left=0.07, bottom=0.15, top=0.67)
         )
 
         # Make the line chart
@@ -70,7 +70,7 @@ def plot(fig_num, outfile, xmax=2.25):
         # Add a y-axis label
         fig.text(
             0.005,
-            1.07,
+            1.10,
             "Median sale price\nper square foot",
             fontsize=10,
             weight="bold",
@@ -82,11 +82,12 @@ def plot(fig_num, outfile, xmax=2.25):
         )
 
         # Format axes
-        ax.set_xlim(-0.05, 2.25)
+        ax.set_xlim(-0.2, 2.25)
         ax.set_xticks(np.arange(0, 2.1, 0.5))
         ax.set_yticks([40, 70, 100, 130])
         ax.set_ylim(35, 135)
         ax.set_yticklabels(["$%.0f" % (x) for x in ax.get_yticks()], fontsize=12)
+        plt.setp(ax.get_yticklabels(), ha="center")
         plt.setp(ax.get_xticklabels(), fontsize=12)
         sns.despine(left=True, bottom=True)
         ax.axhline(y=citywide_median, c=palette["medium-gray"])
