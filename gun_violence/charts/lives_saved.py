@@ -26,7 +26,7 @@ def plot(fig_num, outfile):
         # Initialize
         fig, ax = plt.subplots(
             figsize=(4.5, 3),
-            gridspec_kw=dict(left=0.12, bottom=0.15, right=0.95, top=0.7),
+            gridspec_kw=dict(left=0.12, bottom=0.18, right=0.95, top=0.72),
         )
 
         # Top panel: cumulative lives saved
@@ -63,7 +63,7 @@ def plot(fig_num, outfile):
                 ha="center",
                 weight="bold",
                 fontsize=10,
-                bbox=dict(facecolor="white", pad=0),
+                # bbox=dict(facecolor="white", pad=0),
             )
 
         # Add title
@@ -89,7 +89,7 @@ def plot(fig_num, outfile):
         fig.text(
             0.005,
             0.845,
-            "Over five years, the total number of lives saved would be %d" % total,
+            "Over five years, the plan would save a total of %d lives" % total,
             fontsize=9,
             ha="left",
             va="top",
@@ -99,7 +99,7 @@ def plot(fig_num, outfile):
         # Add the footnote
         footnote = r"$\bf{Note}$: The calculation compares to a baseline scenario where the homicide total remains at its 2018 level"
         fig.text(
-            0.005, 0.002, footnote, fontsize=5, color="#444444", ha="left", va="bottom"
+            0.005, 0.002, footnote, fontsize=6, color="#444444", ha="left", va="bottom"
         )
 
         # Save!

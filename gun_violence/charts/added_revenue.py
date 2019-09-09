@@ -27,7 +27,7 @@ def plot(fig_num, outfile):
             nrows=1,
             ncols=1,
             figsize=(5, 3),
-            gridspec_kw=dict(left=0.13, bottom=0.15, right=0.95, top=0.75, hspace=1.0),
+            gridspec_kw=dict(left=0.13, bottom=0.17, right=0.95, top=0.75, hspace=1.0),
         )
 
         # Top panel: cumulative added revenue
@@ -111,7 +111,7 @@ def plot(fig_num, outfile):
         # Add the footnote
         footnote = r"$\bf{Notes}$: Revenue estimates compound annually, assuming a 2.5% increase in housing prices for every reduction in homicides."
         fig.text(
-            0.005, 0.002, footnote, fontsize=5, color="#444444", ha="left", va="bottom"
+            0.005, 0.002, footnote, fontsize=6, color="#444444", ha="left", va="bottom"
         )
 
         # Save!

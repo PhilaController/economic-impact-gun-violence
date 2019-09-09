@@ -97,7 +97,7 @@ def plot(fig_num, outfile):
             palette=["#d6604d", "#4393c3"],
             alpha=1.0,
             ax=ax,
-            size=3.75,
+            size=4,
             edgecolor="none",
         )
 
@@ -124,7 +124,7 @@ def plot(fig_num, outfile):
             framealpha=1,
             edgecolor="none",
             loc="upper right",
-            bbox_to_anchor=(1, 1),
+            bbox_to_anchor=(1, 1.05),
             bbox_transform=ax.transAxes,
         )
         title = leg.get_title()
@@ -137,7 +137,7 @@ def plot(fig_num, outfile):
             0.99,
             f"Figure {fig_num}",
             weight="bold",
-            fontsize=9,
+            fontsize=10,
             ha="left",
             va="top",
         )
@@ -146,7 +146,7 @@ def plot(fig_num, outfile):
             0.96,
             "Population Change and Number of Homicides since 2010 by Census Tract",
             weight="bold",
-            fontsize=11,
+            fontsize=12,
             ha="left",
             va="top",
         )
@@ -154,7 +154,7 @@ def plot(fig_num, outfile):
             0.005,
             0.92,
             "Areas that experienced the most homicides were more likely to have seen a population decline",
-            fontsize=9,
+            fontsize=10,
             ha="left",
             va="top",
             style="italic",
@@ -166,7 +166,7 @@ def plot(fig_num, outfile):
             0.005,
             0.002,
             footnote,
-            fontsize=7,
+            fontsize=8,
             color=palette["dark-gray"],
             ha="left",
             va="bottom",

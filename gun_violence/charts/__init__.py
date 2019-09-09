@@ -4,6 +4,7 @@ from phila_style import *
 palette = get_default_palette()
 digital_standards = get_digital_standards()
 default_style = get_theme()
+light_palette = get_light_palette()
 
 
 from .price_vs_homicides_by_hood import plot as price_vs_homicides_by_hood

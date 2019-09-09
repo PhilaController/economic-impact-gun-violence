@@ -148,7 +148,7 @@ def plot(fig_num, outfile):
         cax.text(
             0.5,
             1.4,
-            "Concentrated Disadvantage",
+            "Level of Disadvantage",
             transform=cax.transAxes,
             fontsize=10,
             ha="center",
@@ -239,7 +239,7 @@ def plot(fig_num, outfile):
         )
 
         footnote = (
-            r"$\bf{Notes}$: Concentrated disadvantage calculated from"
+            r"$\bf{Notes}$: The level of disadvantage is calculated from"
             " public assistance rates, poverty rates, female-headed households, and population under 18 years old"
         )
         fig.text(
