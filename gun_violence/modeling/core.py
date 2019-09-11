@@ -29,6 +29,7 @@ BUILDING_CHARACTERISTICS = [
     "number_of_rooms",
     "number_stories",
     "police_district",
+    "season",
     "topography",
     "total_area",
     "total_livable_area",
@@ -277,6 +278,7 @@ def get_modeling_inputs(
     sales,
     dropna=False,
     endog="ln_sale_price_indexed",
+    use_features=None,
     as_panel=False,
     engineer_sales=True,
 ):
@@ -292,11 +294,13 @@ def get_modeling_inputs(
         drop the NaN values instead of imputing
     endog : str, optional
         the name of the dependent variable
+    use_features : list of str, optional
+        if provided, only include these building characteristics in the output
     as_panel : bool, optional
         whether to return the data in a panel format, with the neighborhood and 
         sale year as indices
     engineer_sales : bool, optional
-        whether to perform feature engineering first
+        whether to perform feature engineering first.
 
     Returns
     -------
@@ -310,6 +314,23 @@ def get_modeling_inputs(
         features = feature_engineer_sales(sales)
     else:
         features = sales.copy()
+
+    # Trim to specific building characteristics
+    if use_features is not None:
+
+        # make sure we have panel columns
+        if as_panel:
+            for col in ["neighborhood"]:
+                if col not in use_features:
+                    use_features.append(col)
+
+        # remove unnecessary
+        drop = [
+            col
+            for col in BUILDING_CHARACTERISTICS
+            if col in features.columns and col not in use_features
+        ]
+        features = features.drop(labels=drop, axis=1)
 
     # Do not remove the dependent variable
     unnecessary = list(REMOVE)
