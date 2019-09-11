@@ -1,6 +1,11 @@
 """
-A grouped bar chart showing the cumulative cost and added
-revenue associated with a plan that reduces homicides 10% annually.
+A two panel chart: 
+
+    Top panel:  A grouped bar chart showing the annual plan costs and 
+                added revenue associated with a plan that reduces 
+                homicides 10% annually.
+    Bottom panel:   A line chart showing the cumulative return on investment
+                    of such a plan.
 """
 from .. import datasets as gv_data
 from . import default_style, palette, light_palette
@@ -10,23 +15,26 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 
 
-def _calculate():
+def simulate_violence_reduction_plan():
     """
-    Calculate the number of lives saved, plan costs, and added tax 
-    revenue associated with a plan that reduces homicides 10% annually.
+    Simulate the violence reduction plan over five years, assuming 
+    a 10% annual reduction in homicides. This calculates:
+    
+    1. The number of lives saved.
+    2. The annual plan costs, assuming a funding level of $30K per homicide.
+    3. The added tax revenue from property tax revenues.
     """
+    NUM_YEARS = 5  # Run analysis for 5 years
+    START_YEAR = 2018  # First year of plan
+    COST_PER_HOMICIDE = 30e3  # Per Thomas Abt's estimate in Bleeding Out
+    TOTAL_REVENUE = 129.9e6  # From analysis of property assessments near homicides
 
-    NUM_YEARS = 5
-    START_YEAR = 2018
-    COST_PER_HOMICIDE = 30e3
-    TOTAL_REVENUE = 134.2e6
-
-    # Lives Saved
+    # Calculte the number of lives saved
     homicides = [351]
     for i in range(1, NUM_YEARS):
         homicides.append(homicides[i - 1] - np.round(homicides[i - 1] * 0.1))
 
-    # Make the DataFrame
+    # Make into a DataFrame
     df = pd.DataFrame(
         {
             "year": list(range(START_YEAR, START_YEAR + NUM_YEARS)),
@@ -56,15 +64,16 @@ def _calculate():
 
 def _plot_net_gain(ax, data):
     """
-    Plot a bar chart showing the annual net gain
+    Plot a line chart showing the annual net gain.
     """
-    X = range(5)
-    Y = (data["cumulative_revenue"] - data["cumulative_cost"]) / 1e6
+    # Net gain is the difference between cumulative revenue added and cost
+    net_gain = (data["cumulative_revenue"] - data["cumulative_cost"]) / 1e6
 
+    # Make the bar plot
     color = palette["almost-black"]
     ax.plot(
-        X,
-        Y,
+        data["plan_year"],
+        net_gain,
         zorder=1000,
         color=color,
         mfc="white",
@@ -81,6 +90,7 @@ def _plot_net_gain(ax, data):
             fmt = "+$%.0fM"
         return fmt % (abs(y))
 
+    # Add the dollar amounts
     for i in X:
         yval = Y.iloc[i]
         if yval < 0:
@@ -102,18 +112,19 @@ def _plot_net_gain(ax, data):
     # Add a y=0 line
     ax.axhline(y=0, c=palette["light-gray"], lw=2, zorder=101)
 
-    # Format the axes
+    # Format the x-axis
     ax.set_xlim(left=-0.75)
+    ax.set_xlabel("Plan Year", fontsize=10, weight="bold")
+    ax.set_xticks([0, 1, 2, 3, 4])
+    ax.set_xticklabels([1, 2, 3, 4, 5], fontsize=11)
+    ax.xaxis.labelpad = 0
+
+    # Format the y-axis
+    ax.set_ylabel("")
     ax.set_ylim(-30)
     ax.set_yticks([0, 40, 80])
     ax.set_yticklabels([format_currency(x) for x in ax.get_yticks()], fontsize=11)
     plt.setp(ax.get_yticklabels(), ha="center")
-    ax.set_xticks([0, 1, 2, 3, 4])
-    ax.set_xticklabels([1, 2, 3, 4, 5], fontsize=11)
-
-    ax.set_xlabel("Plan Year", fontsize=10, weight="bold")
-    ax.set_ylabel("")
-    ax.xaxis.labelpad = 0
 
     # Add a legend
     ax.legend(
@@ -128,7 +139,7 @@ def _plot_net_gain(ax, data):
 
 def _plot_annual_costs(ax, data):
     """
-    Plot a grouped bar chart showing the annual cost/revenue numbers
+    Plot a grouped bar chart showing the annual cost/revenue numbers.
     """
     # Plot
     sns.barplot(
@@ -145,14 +156,18 @@ def _plot_annual_costs(ax, data):
     # Add a y=0 line
     ax.axhline(y=0, c=palette["light-gray"], lw=4, zorder=101)
 
-    # Format the axes
+    # Format the x-axis
     ax.set_xlim(left=-0.75)
-    ax.set_yticklabels(["$%.0fM" % x for x in ax.get_yticks()], fontsize=11)
-    plt.setp(ax.get_yticklabels(), ha="center")
     plt.setp(ax.get_xticklabels(), fontsize=11)
     ax.set_xlabel("Plan Year", fontsize=10, weight="bold")
-    ax.set_ylabel("")
     ax.xaxis.labelpad = 0
+
+    # Format the y-axis
+    ax.set_ylabel("")
+    ax.set_yticklabels(["$%.0fM" % x for x in ax.get_yticks()], fontsize=11)
+    plt.setp(ax.get_yticklabels(), ha="center")
+
+    # Add a grid
     ax.grid(b=True, axis="x")
 
     # Add a legend
@@ -165,7 +180,7 @@ def _plot_annual_costs(ax, data):
         bbox_to_anchor=(0.5, 0.95),
     )
 
-    # Add the total dollar amount above the chart
+    # Add the total dollar amount above the bars
     for p in ax.patches:
         height = p.get_height()
         if height == 0:
@@ -185,14 +200,18 @@ def _plot_annual_costs(ax, data):
 
 def plot(fig_num, outfile):
     """
-    A grouped bar chart showing the cumulative cost and added
-    revenue associated with a plan that reduces homicides 10% annually.
+    A two panel chart: 
+
+        Top panel:  A grouped bar chart showing the annual plan costs and 
+                    added revenue associated with a plan that reduces 
+                    homicides 10% annually.
+        Bottom panel:   A line chart showing the cumulative return on investment
+                        of such a plan.
     """
-
     # Perform the calculation
-    data = _calculate()
+    data = simulate_violence_reduction_plan()
 
-    # Melt the data
+    # Melt the data into the right format
     melted = (
         data[["plan_year", "plan_cost", "compounded_revenue"]]
         .assign(
@@ -208,9 +227,10 @@ def plot(fig_num, outfile):
         .melt(id_vars=["plan_year"])
     )
 
+    # Plot
     with plt.style.context(default_style):
 
-        # Initialize
+        # Initialize the axes/figure
         fig, axs = plt.subplots(
             figsize=(5, 5),
             nrows=2,
@@ -229,7 +249,7 @@ def plot(fig_num, outfile):
         _plot_annual_costs(axs[0], melted)
         _plot_net_gain(axs[1], data)
 
-        # Add title
+        # Add a figure title
         fig.text(
             0.005,
             0.99,
@@ -249,10 +269,14 @@ def plot(fig_num, outfile):
             va="top",
         )
 
+        # The sub title
+        net_gain = ((data["cumulative_revenue"] - data["cumulative_cost"]) / 1e6).iloc[
+            -1
+        ]
         fig.text(
             0.005,
             0.89,
-            "Over five years, the return on investment would be $78M",
+            "Over five years, the return on investment would be $%.0fM" % net_gain,
             fontsize=10,
             ha="left",
             va="top",

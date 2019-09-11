@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
-from .cost_benefit import _calculate
+from .cost_benefit import simulate_violence_reduction_plan
 
 
 def plot(fig_num, outfile):
@@ -16,9 +16,8 @@ def plot(fig_num, outfile):
     A chart showing a bar chart of the potential added property tax 
     revenue over five years.
     """
-
     # Perform the calculation
-    data = _calculate()
+    data = simulate_violence_reduction_plan()
 
     with plt.style.context(default_style):
 
@@ -41,29 +40,21 @@ def plot(fig_num, outfile):
             zorder=100,
         )
 
-        # Total
-        # ax.text(
-        #     2,
-        #     55,
-        #     "Total Over 5 Years: $%.0fM" % ,
-        #     fontsize=10,
-        #     ha="center",
-        #     va="center",
-        #     weight="bold",
-        #     bbox=dict(facecolor="white", pad=0),
-        # )
-
-        # Format
+        # Format y-axis
+        ax.set_ylabel("")
         ax.set_ylim(0, 55)
         ax.set_yticks([0, 10, 20, 30, 40, 50])
         ax.set_yticklabels(["$%.0fM" % x for x in ax.get_yticks()], fontsize=11)
-        plt.setp(ax.get_xticklabels(), fontsize=11)
-        ax.set_ylabel("")
+
+        # Format x-axis
         ax.set_xlabel("Plan Year", fontsize=10, weight="bold")
+        plt.setp(ax.get_xticklabels(), fontsize=11)
         ax.xaxis.labelpad = 0
 
+        # Add a y=0 line
         ax.axhline(y=0, c=palette["light-gray"], lw=4, zorder=101)
 
+        # Add numbers above the bars
         for i, row in data.iterrows():
             ax.text(
                 i,
@@ -96,6 +87,7 @@ def plot(fig_num, outfile):
             va="top",
         )
 
+        # Sub title
         total = (data["compounded_revenue"] / 1e6).sum()
         fig.text(
             0.005,
