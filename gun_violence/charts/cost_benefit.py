@@ -8,7 +8,7 @@ A two panel chart:
                     of such a plan.
 """
 from .. import datasets as gv_data
-from . import default_style, palette, light_palette
+from . import default_style, palette, light_palette, digital_standards
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -27,7 +27,7 @@ def simulate_violence_reduction_plan():
     NUM_YEARS = 5  # Run analysis for 5 years
     START_YEAR = 2018  # First year of plan
     COST_PER_HOMICIDE = 30e3  # Per Thomas Abt's estimate in Bleeding Out
-    TOTAL_REVENUE = 129.9e6  # From analysis of property assessments near homicides
+    TOTAL_REVENUE = 125.7e6  # From analysis of property assessments near homicides
 
     # Calculte the number of lives saved
     homicides = [351]
@@ -72,8 +72,8 @@ def _plot_net_gain(ax, data):
     # Make the bar plot
     color = palette["almost-black"]
     ax.plot(
-        data["plan_year"],
-        net_gain,
+        data["plan_year"].values,
+        net_gain.values,
         zorder=1000,
         color=color,
         mfc="white",
@@ -91,16 +91,16 @@ def _plot_net_gain(ax, data):
         return fmt % (abs(y))
 
     # Add the dollar amounts
-    for i in X:
-        yval = Y.iloc[i]
+    for i in range(len(net_gain)):
+        yval = net_gain.iloc[i]
         if yval < 0:
             yval -= 5
         else:
             yval += 7
         ax.text(
-            i + 0.1,
+            i + 0.1 + 1,
             yval,
-            format_currency(Y.iloc[i]),
+            format_currency(net_gain.iloc[i]),
             ha="left" if yval < 0 else "right",
             va="top" if yval < 0 else "bottom",
             fontsize=9,
@@ -113,9 +113,9 @@ def _plot_net_gain(ax, data):
     ax.axhline(y=0, c=palette["light-gray"], lw=2, zorder=101)
 
     # Format the x-axis
-    ax.set_xlim(left=-0.75)
+    ax.set_xlim(left=0.25)
     ax.set_xlabel("Plan Year", fontsize=10, weight="bold")
-    ax.set_xticks([0, 1, 2, 3, 4])
+    ax.set_xticks([1, 2, 3, 4, 5])
     ax.set_xticklabels([1, 2, 3, 4, 5], fontsize=11)
     ax.xaxis.labelpad = 0
 
@@ -146,7 +146,9 @@ def _plot_annual_costs(ax, data):
         x="plan_year",
         y="value",
         hue="variable",
-        palette=[light_palette[color] for color in ["blue", "green"]],
+        palette=[
+            digital_standards[color] for color in ["love-park-red", "dark-ben-franklin"]
+        ],
         ax=ax,
         saturation=1.0,
         zorder=100,
@@ -288,7 +290,7 @@ def plot(fig_num, outfile):
             r"$\bf{Notes}$: Annual plan costs estimated to be \$30K per homicide per Thomas Abt's $\it{Bleeding \ Out}$;"
             "\n"
             + " " * 15
-            + "Revenue estimate compounds annually, assuming a 2.5% increase in housing prices for every reduction in homicide."
+            + "Revenue estimate compounds annually, assuming a 2.3% increase in housing prices for every reduction in homicide."
         )
         fig.text(
             0.005, 0.002, footnote, fontsize=6, color="#444444", ha="left", va="bottom"
