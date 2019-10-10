@@ -16,3 +16,4 @@ from .homicides_poverty import plot as homicides_poverty
 from .cost_benefit import plot as cost_benefit
 from .added_revenue import plot as added_revenue
 from .lives_saved import plot as lives_saved
+from .pta import plot as pta
