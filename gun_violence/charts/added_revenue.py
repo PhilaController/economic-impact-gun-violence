@@ -3,7 +3,7 @@ A chart showing a bar chart of the potential added property tax
 revenue over five years.
 """
 from .. import datasets as gv_data
-from . import default_style, palette
+from . import default_style, palette, digital_standards
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -30,7 +30,7 @@ def plot(fig_num, outfile):
         )
 
         # Top panel: cumulative added revenue
-        color = palette["blue"]
+        color = digital_standards["dark-ben-franklin"]
         sns.barplot(
             x=data["plan_year"],
             y=data["compounded_revenue"] / 1e6,
@@ -101,7 +101,7 @@ def plot(fig_num, outfile):
         )
 
         # Add the footnote
-        footnote = r"$\bf{Notes}$: Revenue estimates compound annually, assuming a 2.5% increase in housing prices for every reduction in homicides."
+        footnote = r"$\bf{Notes}$: Revenue estimates compound annually, assuming a 2.3% increase in housing prices for every reduction in homicides."
         fig.text(
             0.005, 0.002, footnote, fontsize=6, color="#444444", ha="left", va="bottom"
         )

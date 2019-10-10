@@ -4,7 +4,7 @@ citywide median, as a function of the distance from
 """
 from .. import datasets as gv_data
 from ..modeling import get_sale_price_psf_from_homicide
-from . import default_style, palette
+from . import default_style, palette, digital_standards
 import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
@@ -49,7 +49,7 @@ def plot(fig_num, outfile, xmax=2.25):
         )
 
         # Make the line chart
-        color = palette["blue"]
+        color = digital_standards["dark-ben-franklin"]
         valid = X < xmax
         ax.plot(
             X[valid],

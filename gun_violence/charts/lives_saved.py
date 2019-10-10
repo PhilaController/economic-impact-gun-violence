@@ -3,8 +3,8 @@ A bar chart showing the total number of lives saved associated
 with a plan that reduces homicides 10% annually.
 """
 from .. import datasets as gv_data
-from . import default_style, palette
-from .cost_benefit import _calculate
+from . import default_style, palette, digital_standards
+from .cost_benefit import simulate_violence_reduction_plan
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -18,7 +18,7 @@ def plot(fig_num, outfile):
     """
 
     # Perform the calculation
-    data = _calculate()
+    data = simulate_violence_reduction_plan()
     data["cumulative_lives_saved"] = data["lives_saved"].cumsum()
 
     with plt.style.context(default_style):
@@ -30,7 +30,7 @@ def plot(fig_num, outfile):
         )
 
         # Top panel: cumulative lives saved
-        color = palette["blue"]
+        color = digital_standards["dark-ben-franklin"]
         sns.barplot(
             x=data["plan_year"],
             y=data["cumulative_lives_saved"],
