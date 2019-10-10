@@ -191,13 +191,15 @@ def _race_panel(ax, df):
     """
     Stacked bar graph showing breakdown of homicide by race: Black, White, and All Others
     """
+    df["race"] = df["race"].replace({"Black": "Black/African American"})
+
     # Do Black/White/Other
-    df.loc[~df.race.isin(["Black", "White"]), "race"] = "All Others"
+    df.loc[~df.race.isin(["Black/African American", "White"]), "race"] = "All Others"
     N = df.groupby(["year", "race"]).size().reset_index(name="N")
 
     # Plot
     colors = ["blue", "yellow", "red"]
-    order = ["Black", "White", "All Others"]
+    order = ["Black/African American", "White", "All Others"]
     N.pivot(index="year", columns="race", values="N").fillna(0)[order].plot.bar(
         stacked=True, ax=ax, legend=False, color=[palette[c] for c in colors]
     )
@@ -213,13 +215,18 @@ def _race_panel(ax, df):
     ax.set_ylabel("Number of Homicides", weight="bold", fontsize=11)
 
     # Add a legend
+    handles, labels = ax.get_legend_handles_labels()
+    order = [1, 0, 2]
     ax.legend(
+        [handles[idx] for idx in order],
+        [labels[idx] for idx in order],
         loc="lower right",
         edgecolor="none",
         framealpha=1,
         ncol=2,
-        fontsize=10,
-        bbox_to_anchor=(1, 0.92),
+        fontsize=9,
+        bbox_to_anchor=(1.15, 0.92),
+        columnspacing=0.7,
     )
 
     # Title
