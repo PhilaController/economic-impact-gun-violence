@@ -7,7 +7,12 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from ..datasets import amenities
 
-__all__ = ["add_neighborhood_features", "feature_engineer_sales", "get_modeling_inputs"]
+__all__ = [
+    "add_neighborhood_features",
+    "feature_engineer_sales",
+    "get_modeling_inputs",
+    "run_regression",
+]
 
 # fields related to building characteristics
 BUILDING_CHARACTERISTICS = [
@@ -432,3 +437,42 @@ def get_modeling_inputs(
 
     return X, Y
 
+
+def run_regression(
+    salesWithFlags,
+    use_features=None,
+    entity_effects=True,
+    time_effects=True,
+    cov_type="clustered",
+    cluster_entity=True,
+):
+    """
+    Run a panel regression on the input sales data.
+
+    Parameters
+    ----------
+    salesWithFlags : pandas.DataFrame
+        the sales data with any interaction flags already added
+    use_features : list of str, optional
+        if specified, only include these property characteristics in the regression
+    entity_effects : bool, optional
+        include neighborhood fixed effects
+    time_effects : bool, optional
+        include year fixed effects
+    cov_type : str, optional
+        the covariance type to use
+    cluster_entity : bool, optional
+        if using clustered errors, cluster at the neighborhood level
+    """
+    from linearmodels import PanelOLS
+
+    # get the modeling inputs
+    X, Y = get_modeling_inputs(
+        salesWithFlags, dropna=False, as_panel=True, use_features=use_features
+    )
+
+    # initialize the panel regression
+    mod = PanelOLS(Y, X, entity_effects=entity_effects, time_effects=time_effects)
+
+    # return the regression result
+    return mod.fit(cov_type=cov_type, cluster_entity=cluster_entity)
