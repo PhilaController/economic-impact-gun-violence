@@ -95,7 +95,14 @@ def _get_sale_groups_by_homicide(homicides, sales, space_radius, time_window):
 
 
 def add_spacetime_flags(
-    homicides, sales, distances, windows, window_sales=True, add_interactions=True
+    homicides,
+    sales,
+    distances,
+    windows,
+    window_sales=True,
+    add_interactions=True,
+    exclude_duplicates=True,
+    trim_by_max_distance=True,
 ):
     """
     Add flags to the input sales if a homicide occurs within a given time window 
@@ -178,30 +185,47 @@ def add_spacetime_flags(
         )
         salesWithFlags = salesWithFlags.loc[valid]
 
-    # Add the interaction flags
-    if add_interactions:
+    # Add flags denoted if sales is within distance limit
+    for dist in distances[1:]:
+        col = f"spacetime_flag_within_{dist}"
+        cols = [f"spacetime_flag_{tag}_{dist}" for tag in ["after", "before"]]
+        salesWithFlags[col] = salesWithFlags[cols].any(axis=1).astype(int)
 
-        # Add coefficients for 0.5 * (after - before)
-        for dist in distances[1:]:
-            salesWithFlags[f"spacetime_flag_{dist}"] = 0.5 * (
-                salesWithFlags[f"spacetime_flag_after_{dist}"]
-                - salesWithFlags[f"spacetime_flag_before_{dist}"]
-            )
+    # Return if we don't want to add interactions
+    if not add_interactions:
+        return salesWithFlags
 
-        # Remove original columns
-        salesWithFlags = salesWithFlags.drop(
-            labels=[
-                f"spacetime_flag_{tag}_{dist}"
-                for dist in distances[1:]
-                for tag in ["after", "before"]
-            ],
-            axis=1,
-        )
-    else:
-        for dist in distances[1:]:
-            col = f"spacetime_flag_within_{dist}"
+    # Remove any sales that are both before and after a homicide
+    if exclude_duplicates:
+
+        # test for duplicates for all distances limits
+        # or every dist but the last one (if we using it as a control)
+        if trim_by_max_distance:
+            D = distances[1:-1]
+        else:
+            D = distances[1:]
+
+        # Remove duplicates
+        for dist in D:
             cols = [f"spacetime_flag_{tag}_{dist}" for tag in ["after", "before"]]
-            salesWithFlags[col] = salesWithFlags[cols].any(axis=1).astype(int)
+            duplicated = salesWithFlags[cols].all(axis=1)
+            salesWithFlags = salesWithFlags.loc[~duplicated]
+
+    # Remove sales outside our max distance limit
+    if trim_by_max_distance:
+
+        cols = [f"spacetime_flag_within_{dist}" for dist in distances[1:]]
+        outside = salesWithFlags[cols].sum(axis=1) == 0
+        salesWithFlags = salesWithFlags.loc[~outside]
+
+    # Remove extra columns
+    toRemove = [f"spacetime_flag_before_{dist}" for dist in distances[1:]]
+    if trim_by_max_distance:
+        toRemove += [
+            f"spacetime_flag_{tag}_{distances[-1]}"
+            for tag in ["after", "before", "within"]
+        ]
+    salesWithFlags = salesWithFlags.drop(labels=toRemove, axis=1)
 
     return salesWithFlags
 
