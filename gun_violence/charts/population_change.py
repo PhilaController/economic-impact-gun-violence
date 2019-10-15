@@ -89,12 +89,13 @@ def plot(fig_num, outfile):
         ax.set_ylim(-3100, 3100)
 
         # Plot the swarm plot
+        colors = sns.color_palette("RdYlGn", 7, desat=0.8).as_hex()
         sns.swarmplot(
             x="bins",
             y="total_population",
             data=data,
             hue="Sign",
-            palette=["#d6604d", "#4393c3"],
+            palette=[colors[-1], colors[0]],
             alpha=1.0,
             ax=ax,
             size=4,
@@ -129,7 +130,7 @@ def plot(fig_num, outfile):
         )
         title = leg.get_title()
         title.set_weight("bold")
-        title.set_fontsize(10)
+        title.set_fontsize(11)
 
         # Add title
         fig.text(

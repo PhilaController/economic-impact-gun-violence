@@ -2,7 +2,6 @@
 A bar chart showing the total number of lives saved associated 
 with a plan that reduces homicides 10% annually.
 """
-from .. import datasets as gv_data
 from . import default_style, palette, digital_standards
 from .cost_benefit import simulate_violence_reduction_plan
 import numpy as np
