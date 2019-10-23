@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, FunctionTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
@@ -45,7 +45,7 @@ BUILDING_CHARACTERISTICS = [
     "zoning",
 ]
 
-# categorical fieldss
+# categorical fields
 CATEGORICAL = [
     "basements",
     "building_code_description",
