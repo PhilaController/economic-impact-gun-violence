@@ -42,17 +42,13 @@ class CensusDataset(Dataset):
         year : int, optional
             the year of data to download
         """
-
-        # make sure we have the API key
-        assert "CENSUS_API_KEY" in os.environ
-
         # get the census tracts
         tracts = CensusTracts2010.get().assign(
             tract=lambda df: df.census_tract_id.astype(str).str.slice(-6)
         )
 
         # initialize the api
-        api = Census(os.environ["CENSUS_API_KEY"], year=year)
+        api = Census(api_key=os.enviro.get("CENSUS_API_KEY", None), year=year)
 
         # this is a hack to support ACS5 subject tables
         if dataset is not None:

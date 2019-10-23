@@ -10,8 +10,11 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 
-from phila_opa.db import OPAData00s
-from phila_opa.select import residential
+try:
+    from phila_opa.db import OPAData00s
+    from phila_opa.select import residential
+except:
+    OPAData00s = None
 
 __all__ = ["ResidentialSales"]
 
@@ -28,6 +31,9 @@ def generate_sales_file(start_year=2006, end_year=2020, opa_data_dir=None):
     # initialize the database
     if opa_data_dir is None:
         opa_data_dir = "/Users/nicholashand/LocalWork/Data/OPA/"
+
+    if OPAData00s is None:
+        raise ValueError("sales file can only be generated on local machine")
     db = OPAData00s(data_dir=opa_data_dir)
 
     # do tax years 2006 through 2019
