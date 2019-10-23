@@ -4,7 +4,6 @@ scipy
 geopandas
 esri2gpd
 carto2gpd
-osm2gpd
 phila_style
 scikit-learn
 linearmodels
