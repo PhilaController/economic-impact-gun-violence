@@ -1,7 +1,7 @@
 pandas
 numpy
 scipy
-geopandas
+geopandas<0.6
 esri2gpd
 carto2gpd
 phila_style
