@@ -68,7 +68,7 @@ class Dataset(ABC):
         if cls.compress:
             filename = "data.csv.tar.gz"
         else:
-            filaname = "data.csv"
+            filename = "data.csv"
 
         dirname = cls.get_path(**kwargs)
         if not os.path.exists(dirname):

@@ -11,3 +11,5 @@ linearmodels
 census
 beautifulsoup4
 fredapi
+matplotlib
+descartes
