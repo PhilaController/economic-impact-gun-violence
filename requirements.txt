@@ -1,3 +1,8 @@
+pandas
+numpy
 geopandas
 esri2gpd
 carto2gpd
+phila_style
+scikit-learn
+linearmodels
