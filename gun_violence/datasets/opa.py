@@ -177,6 +177,7 @@ class ResidentialSales(Dataset):
     the interquartile range (IQR).
     """
 
+    compress = True
     date_columns = ["sale_date"]
 
     @classmethod

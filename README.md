@@ -1,4 +1,4 @@
-# Report on the Economic Impact of Gun Violence in Philadelphia
+# Report on the Economic Impact of Homicides in Philadelphia
 
 This repository holds the software and data used by the Office of the City
 Controller in its report on the economic impact of gun violence in Philadelphia.

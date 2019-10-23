@@ -11,6 +11,7 @@ class Dataset(ABC):
     Abstract base class representing a dataset.
     """
 
+    compress = False
     date_columns = []
 
     @classmethod
@@ -64,16 +65,21 @@ class Dataset(ABC):
         """
         Load the dataset, optionally downloading a fresh copy.
         """
+        if cls.compress:
+            filename = "data.csv.tar.gz"
+        else:
+            filaname = "data.csv"
+
         dirname = cls.get_path(**kwargs)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
             fresh = True
 
-        if not os.path.exists(os.path.join(dirname, "data.csv")) or fresh:
+        if not os.path.exists(os.path.join(dirname, filename)) or fresh:
 
             # download and save a fresh copy
             data = cls.download(**kwargs)
-            data.to_csv(os.path.join(dirname, "data.csv"), index=False)
+            data.to_csv(os.path.join(dirname, filename), index=False)
 
             # save the download time
             meta = {"download_time": cls.now()}
@@ -81,7 +87,7 @@ class Dataset(ABC):
 
         else:
             data = cls._format_data(
-                pd.read_csv(os.path.join(dirname, "data.csv"), low_memory=False)
+                pd.read_csv(os.path.join(dirname, filename), low_memory=False)
             )
 
         return data
