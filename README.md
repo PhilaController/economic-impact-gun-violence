@@ -2,8 +2,8 @@
 
 This repository holds the software and data used by the Office of the City
 Controller in its report on the economic impact of gun violence in Philadelphia.
-The full report, entitled ["Report on the Economic Impact of
-Homicides"](https://controller.phila.gov/philadelphia-audits/economic-impact-of-homicides/)
+The full analysis, entitled "Report on the Economic Impact of
+Homicides" can be found on the [Controller's Office website](https://controller.phila.gov/philadelphia-audits/economic-impact-of-homicides/).
 
 ### Tutorial
 
