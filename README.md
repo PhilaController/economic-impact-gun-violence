@@ -11,4 +11,4 @@ Homicides" can be found on the [Controller's Office website](https://controller.
 
 ### Questions or Comments
 
-For questions or comments, please contact controller.policy@phila.gov.
+For questions or comments, please contact controller@phila.gov.
